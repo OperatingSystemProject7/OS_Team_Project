@@ -813,7 +813,7 @@ int PrintPath(DirectoryTree* TreeDir, Stack* StackDir)
 }
 
 //cat
-int Concatenate(DirectoryTree* TreeDir, char* fName, int o)
+int Concatenate(DirectoryTree* dirTree, char* fName, int o)
 {
     UserNode* tmpUser = NULL;
     TreeNode* tmpNode = NULL;
@@ -825,66 +825,75 @@ int Concatenate(DirectoryTree* TreeDir, char* fName, int o)
     int cnt = 1;
 
     //file read
-    if (o != 0) {
-        if (o == 4) {
+    if(o != 0){
+        if(o == 4){
             tmpUser = UsersList->head;
-            while (tmpUser != NULL) {
+            while(tmpUser != NULL){
                 printf("%s:x:%d:%d:%s:%s\n", tmpUser->name, tmpUser->UID, tmpUser->GID, tmpUser->name, tmpUser->dir);
                 tmpUser = tmpUser->LinkNode;
             }
             return 0;
         }
-        tmpNode = DirExistion(TreeDir, fName, 'f');
+        tmpNode = DirExistion(dirTree,fName, 'f');
 
-        if (tmpNode == NULL) {
+        if(tmpNode == NULL){
             return -1;
         }
-        fp = fopen(fName, "r"); // 에러나는 부분!
-        while (feof(fp) == 0) {
+        fp = fopen(fName, "r");
+
+        while(feof(fp) == 0){
             fgets(buf, sizeof(buf), fp);
-            if (feof(fp) != 0) {
+            if(feof(fp) != 0){
                 break;
             }
-            if (o == 2) {
-                if (buf[strlen(buf) - 1] == '\n') {
-                    printf("     %d ", cnt);
+            //w/ line number
+            if(o == 2){
+                if(buf[strlen(buf)-1] == '\n'){
+                    printf("     %d ",cnt);
                     cnt++;
                 }
             }
-            else if (o == 3) {
-                if (buf[strlen(buf) - 1] == '\n' && buf[0] != '\n') {
-                    printf("     %d ", cnt);
+            else if(o == 3){
+                if(buf[strlen(buf)-1] == '\n' && buf[0] != '\n'){
+                    printf("     %d ",cnt);
                     cnt++;
                 }
             }
             fputs(buf, stdout);
         }
+
         fclose(fp);
     }
-    else {
+    //file write
+    else{
         fp = fopen(fName, "w");
-        while (strcmp(buf, ":wq") != 0 || strcmp(buf, ":q") != 0) {
-            fgets(buf, 500, fp);
-            if (strcmp(buf, ":wq") == 0 || strcmp(buf, ":q") == 0) {
-                break;
-            }
-            fprintf(fp, "%s\n", buf);
-            tmpSIZE += strlen(buf) - 1;
+
+	while(fgets(buf, sizeof(buf), stdin)){
+            fputs(buf, fp);
+            //get file size
+            tmpSIZE += strlen(buf)-1;
+            
         }
+        rewind(stdin);
         fclose(fp);
-        tmpNode = DirExistion(TreeDir, fName, 'f');
-        if (tmpNode != NULL) {
+
+        tmpNode = DirExistion(dirTree, fName, 'f');
+        //if exist
+        if(tmpNode != NULL){
             time(&ltime);
             today = localtime(&ltime);
+
             tmpNode->month = today->tm_mon + 1;
             tmpNode->day = today->tm_mday;
             tmpNode->hour = today->tm_hour;
             tmpNode->min = today->tm_min;
         }
-        else {
-            MakeDir(TreeDir, fName, 'f');
+        //if file doesn't exist
+        else{
+            MakeDir(dirTree, fName, 'f');
         }
-        tmpNode = DirExistion(TreeDir, fName, 'f');
+        //write size
+        tmpNode = DirExistion(dirTree, fName, 'f');
         tmpNode->SIZE = tmpSIZE;
     }
     return 0;
