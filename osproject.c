@@ -98,8 +98,11 @@ void PrintStart();
 void HeadPrifnt(DirectoryTree* TreeDir, Stack* StackDir);
 
 //grep
+char* deleteSpace(char *s);
 void grep(char* Word_Search, char* f_name);
 void grep2(char* Word_Search, char* f_name);
+void grep_v(char* findWord, char* findFile);
+void grep_i(char* findWord, char* findFile);
 
 
 //utility
@@ -299,8 +302,8 @@ int mycp(DirectoryTree* TreeDir, char* sName, char* oName) {
 
     in = open(sName, O_RDONLY); // Original File
     out = open(oName, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);//File to make
-    nread = read(in, buf, sizeof(buf)); //ì½ì€ ë§Œí¼ nreadê°€ ì¦ê°€í•¨
-    write(out, buf, nread);          //readë§Œí¼ writeí•¨
+    nread = read(in, buf, sizeof(buf)); //?½??? ë§Œí¼ nreadê°? ì¦ê???•¨
+    write(out, buf, nread);          //readë§Œí¼ write?•¨
 
     MakeDir(TreeDir, oName, 'f');
 
@@ -2053,9 +2056,9 @@ int cat(DirectoryTree* TreeDir, char* cmd)
         }
         //printf("cmd :  %s\n", cmd);
         //printf("tmp:   %s\n", tmp);
-        strncpy(tmp, cmd, strlen(cmd)); // ë³€ê²½ ë¶€ë¶„!! cmdì— ì œëŒ€ë¡œ ëœ ê°’ ì „ë‹¬ X
+        strncpy(tmp, cmd, strlen(cmd)); // ë³?ê²? ë¶?ë¶?!! cmd?— ? œ???ë¡? ?œ ê°? ? „?‹¬ X
         //printf("%s\n", tmp);
-        if (strstr(cmd, "/") == NULL) { // segfault ë°œìƒ ì§€ì—­
+        if (strstr(cmd, "/") == NULL) { // segfault ë°œìƒ ì§??—­
             if (OwnPermission(TreeDir->current, 'w') != 0) {
                 printf("cat: Can not create file '%s': Permission denied\n", TreeDir->current->name);
                 return -1;
@@ -2076,7 +2079,7 @@ int cat(DirectoryTree* TreeDir, char* cmd)
                 return -1;
             }
             else {
-                //printf("%s\n", cmd); íŒŒì¼ ì´ë¦„ ì˜ ë„˜ì–´ê°
+                //printf("%s\n", cmd); ?ŒŒ?¼ ?´ë¦? ?˜ ?„˜?–´ê°?
                 Concatenate(TreeDir, cmd, 1);
             }
 
@@ -2144,6 +2147,19 @@ void grep(char* Word_Search, char* f_name) {
     fclose(fp);
 }
 
+char* deleteSpace(char* s){
+    int k = 0;
+    char* str = (char*)malloc(sizeof(s));
+
+    for (int i=0;i<strlen(s);i++){
+        if (s[i]!=' ') {
+            str[k++] = s[i];
+        }
+    }
+    str[k] = '\0';
+    return str;
+}
+
 void grep2(char* Word_Search, char* f_name) {
     int i = 1;
     char output_line[MAX_LENGTH];
@@ -2168,6 +2184,74 @@ void grep2(char* Word_Search, char* f_name) {
     }
     fclose(fp);
 }
+
+// -v : ÀÏÄ¡ÇÏÁö ¾Ê´Â ³»¿ë Ãâ·Â
+void grep_v(char* findWord, char *findFile){
+    FILE* fp = fopen(findFile, "rt");
+    if(fp == NULL){
+        printf("Can not Exist File!\n");
+        return;
+    }
+
+    int index = 0;
+    char outputLine[MAX_LENGTH];
+    int isNotExist[MAX_LENGTH] = {0, };
+    memset(isNotExist, 0, sizeof(isNotExist));
+    while(!feof(fp)){
+        char* temp = fgets(outputLine, sizeof(outputLine), fp);
+        if(temp == NULL) break;
+        temp = deleteSpace(temp);
+        if(strstr(temp, findWord) == NULL){
+            isNotExist[index] = 1;
+        }
+        index++;  
+    }
+    fclose(fp);
+
+    index = 0;
+    FILE* rfp = fopen(findFile, "rt");
+    while(!feof(rfp)){
+        char* temp = fgets(outputLine, sizeof(outputLine), rfp);
+        if(temp == NULL) break;
+        if(isNotExist[index++]){
+            printf("%s", temp);
+        }
+    }
+    fclose(rfp);
+}
+
+// ´ë¼Ò¹®ÀÚ ±¸ºĞ¾øÀÌ
+void grep_i(char* findWord, char *findFile){
+    FILE* fp = fopen(findFile, "rt");
+    if(fp == NULL){
+        printf("Can not Exist File!\n");
+        return;
+    }
+
+    for(int i=0;i<strlen(findWord);i++){
+        if(65 <= findWord[i] && findWord[i] <= 90){
+                findWord[i] += 32;
+            }
+    }
+
+    char outputLine[MAX_LENGTH];
+    while(!feof(fp)){
+        char* line = fgets(outputLine, sizeof(outputLine), fp);
+        char* temp = line;
+        if(temp == NULL) break;
+        temp = deleteSpace(temp);
+        for(int i=0;i<strlen(temp);i++){
+            if(65 <= temp[i] && temp[i] <= 90){
+                temp[i] += 32;
+            }
+        }
+        if(strstr(temp, findWord) != NULL){
+            printf("%s", line);
+        }
+    }
+    fclose(fp);
+}
+
 
 int chmod_(DirectoryTree* TreeDir, char* cmd)
 {
@@ -2384,8 +2468,14 @@ void Instruction(DirectoryTree* TreeDir, char* cmd)
         str2 = strtok(NULL, " ");
         if (strcmp(str, "-n") == 0)
             grep2(str1, str2);
-        else
+        else if(!strcmp(str, "-v")) {
+            grep_v(str1, str2);
+        } 
+        else if(!strcmp(str, "-i")){
+            grep_i(str1, str2);
+        } else{
             grep(str, str1);
+        }
     }
     else if (strcmp(str, "clear") == 0) {
         system("cls");
