@@ -58,31 +58,4 @@
 # [팀원 : 김중원 - cd, cat]
  <Br>
 
-# &#35; cd 
-### 요구 사항
-* 요구되는 헤더 파일 : 구조체 선언 + Utilty 메소드
-* 구현 내부 메소드 2개
-    * currentMove(DirectoryTree* treeDir, char* pathDir);
-    * pathMove(DirectoryTree* treeDir, char* pathDir); <br>
-* Utility 메소드
-    * DirExistion( &rarr;dirExistion) <br>
-
-&rarr;  위 메소드 2개 + utility 메소드를 이용하여 cd 동작
-
-<br> <br>
-
-# &#35; cat 
-### 요구 사항
-* 요구되는 헤더 파일 : 구조체 선언 + Utilty 메소드
-* 타 명령어 헤더 파일
-    * mkdir 명령어 구현 헤더 파일 <br>
-        &rarr; MakeDir(MakeDir(DirectoryTree* TreeDir, char* NameDir, char type));
-* 구현 내부 메소드 1개
-    * conCatenate(DirectoryTree* treeDir, char* fName, int o); <br>
-* Utility 메소드
-    * DirExistion( &rarr;dirExistion) <br> 
-* main.c에서 사용할 전역 변수
-    * time_t ltime 
-    * struct tm* today;
-
-&rarr;  위 메소드 1개 + utility 메소드를 이용하여 cat 동작
+# &#35; grep : -v, -i 옵션 구현
